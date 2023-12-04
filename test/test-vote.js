@@ -12,7 +12,10 @@ describe("Voting contract", function () {
     Voting = await ethers.getContractFactory("Voting");
     voting = await Voting.deploy(account1.address); 
     await voting.connect(account2).Sign_up("tzy", "123");
-    await voting.createVote(0,"test","justTest",123,126);//create a voting
+    //1865424000-1866132800
+    await voting.createVote("0","test","justTest",0,  10000000000);//create a voting
+    await voting.createVote("1","test1","justTest1",0,10000000000);
+    
   });
 
 
@@ -34,12 +37,29 @@ describe("Voting contract", function () {
     expect(info.password).to.equal('123');
   });
   it("account1 should be able to create a voting", async function () {
-    //await voting.connect(connect(account1)).createVoting("test","justTest","12.3","12.4");
-    const votes = await voting.getVote(0);
-    expect(votes.name).to.equal("test");
-    expect(votes.description).to.equal("justTest");
-    expect(votes.startTime).to.equal(123);
-    expect(votes.endTime).to.equal(126);
+    //const votes = await voting.getVote(0);
+    const votes = await voting.getVote("1");
+    //expect(votes.id).to.equal(0);
+    expect(votes.name).to.equal("test1");
+    expect(votes.description).to.equal("justTest1");
+    expect(votes.startTime).to.equal(0);
+    expect(votes.endTime).to.equal(10000000000);
     expect(votes.total).to.equal(0);
   });
+  it("accpunt1 should be able to remove a voting", async function () {
+    await voting.removeVote("0");
+    const votes = await voting.getVote("0");
+    expect(votes.name).to.equal("");
+    expect(votes.description).to.equal("");
+    expect(votes.startTime).to.equal(0);
+    expect(votes.endTime).to.equal(0);
+    expect(votes.total).to.equal(0);
+  });
+
+  it("account2 should be able to vote", async function () {
+    await voting.connect(account2).vote("0");
+    const votes = await voting.getVote("0");
+    expect(votes.total).to.equal(1);
+  });
+
 });

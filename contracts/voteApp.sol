@@ -33,47 +33,55 @@ contract Voting{
 
     //投票
     struct Vote{//投票结构
-        uint256 id;
+        string id;
         string name;
         string description;
         uint256 startTime;
         uint256 endTime;
         uint256 total;
     }
-    mapping(uint256 => Vote) votes;//投票id=>投票
-    uint256 voteNum = 0;//投票数量
+    mapping(string => Vote) votes;//投票id=>投票
     //创建投票
-    function createVote(uint _id,string memory name, string memory description, uint256 startTime, uint256 endTime) public{
+    event CreateVote(string id, string name, string description, uint256 startTime, uint256 endTime);
+    event RemoveVote(string id);
+    event voting(string id,address addr);
+    event cancelVoting(string id,address addr);
+
+    function createVote(string memory _id,string memory name, string memory description, uint256 startTime, uint256 endTime) public{
         require(msg.sender == admin, "You are not the admin.");
-        votes[voteNum].id = _id;
-        votes[voteNum].name = name;
-        votes[voteNum].description = description;
-        votes[voteNum].startTime = startTime;
-        votes[voteNum].endTime = endTime;
-        votes[voteNum].total = 0;
+        votes[_id].id = _id;
+        votes[_id].name = name;
+        votes[_id].description = description;
+        votes[_id].startTime = startTime;
+        votes[_id].endTime = endTime;
+        votes[_id].total = 0;
+        emit CreateVote(_id, name, description, startTime, endTime);
     }
     //删除投票
-    function removeVote(uint256 id) public{
+    function removeVote(string memory id) public{
         require(msg.sender == admin, "You are not the admin.");
         delete votes[id];
+        emit RemoveVote(id);
     }
     //投票
-    function vote(uint256 id) public{
+    function vote(string memory id) public{
         require(block.timestamp >= votes[id].startTime && block.timestamp <= votes[id].endTime, "The vote is not in progress.");
         votes[id].total++;
+        emit voting(id,msg.sender);
     }
     //撤销投票
-    function cancelVote(uint256 id) public{
+    function cancelVote(string memory id) public{
         require(block.timestamp >= votes[id].startTime && block.timestamp <= votes[id].endTime, "The vote is not in progress.");
         votes[id].total--;
+        emit cancelVoting(id,msg.sender);
     }
     //查询
     //查询投票
-    function getVote(uint256 id) public view returns(Vote memory){
+    function getVote(string memory id) public view returns(Vote memory){
             return votes[id];
     }
     //查询投票结果
-    function getVoteResult(uint256 id) public view returns(uint256){
+    function getVoteResult(string memory id) public view returns(uint256){
         return votes[id].total;
     }
 
