@@ -32,6 +32,15 @@ contract Voting{
     }
 
     //投票
+    //候选项目
+    struct Candidate{//候选项目结构
+        string id;
+        string name;
+        string description;
+        uint256 _total;
+    }
+    mapping(string => Candidate) candidates;//候选项目id=>候选项目
+    
     struct Vote{//投票结构
         string id;
         string name;
@@ -39,14 +48,26 @@ contract Voting{
         uint256 startTime;
         uint256 endTime;
         uint256 total;
+        Candidate[] candidates;
     }
     mapping(string => Vote) votes;//投票id=>投票
     //创建投票
     event CreateVote(string id, string name, string description, uint256 startTime, uint256 endTime);
+    event AddCandidateToVote(string id,string candidateId);
     event RemoveVote(string id);
     event voting(string id,address addr);
     event cancelVoting(string id,address addr);
 
+    //创建候选项目
+    function createCandidate(string memory _id,string memory name, string memory description) public{
+        require(msg.sender == admin, "You are not the admin.");
+        candidates[_id].id = _id;
+        candidates[_id].name = name;
+        candidates[_id].description = description;
+        candidates[_id]._total = 0;
+    }
+    
+    //创建投票
     function createVote(string memory _id,string memory name, string memory description, uint256 endTime) public{
         require(msg.sender == admin, "You are not the admin.");
         uint256 _endTime = endTime*1 days;
@@ -58,6 +79,12 @@ contract Voting{
         votes[_id].total = 0;
         emit CreateVote(_id, name, description, block.timestamp, endTime);
     }
+    //为投票添加候选项目
+    function addCandidateToVote(string memory id,string memory candidateId) public{
+        require(msg.sender == admin, "You are not the admin.");
+        votes[id].candidates.push(candidates[candidateId]);
+        emit AddCandidateToVote(id,candidateId);
+    }
     //删除投票
     function removeVote(string memory id) public{
         require(msg.sender == admin, "You are not the admin.");
@@ -65,9 +92,10 @@ contract Voting{
         emit RemoveVote(id);
     }
     //投票
-    function vote(string memory id) public{
+    function vote(string memory id,string memory _candidateId) public{
         require(block.timestamp >= votes[id].startTime && block.timestamp <= votes[id].endTime, "The vote is not in progress.");
         votes[id].total++;
+        candidates[_candidateId]._total++;
         emit voting(id,msg.sender);
     }
     //撤销投票
@@ -77,6 +105,16 @@ contract Voting{
         emit cancelVoting(id,msg.sender);
     }
     //查询
+
+    //查询投票项目
+    function getCandidate(string memory id) public view returns(Candidate memory){
+        return candidates[id];
+    }
+    
+    function getAllCandidatesOfVote(string memory id) public view returns(Candidate[] memory){
+        return votes[id].candidates;
+    }
+
     //查询投票
     function getVote(string memory id) public view returns(Vote memory){
             return votes[id];
