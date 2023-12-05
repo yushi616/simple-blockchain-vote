@@ -39,7 +39,7 @@ contract Voting{
         string description;
         uint256 _total;
     }
-    mapping(string => Candidate) candidates;//候选项目id=>候选项目
+    mapping(string => Candidate) _candidates;//候选项目id=>候选项目
     
     struct Vote{//投票结构
         string id;
@@ -49,22 +49,23 @@ contract Voting{
         uint256 endTime;
         uint256 total;
         Candidate[] candidates;
+        //mapping(string => Candidate) candidates;//候选项目id=>候选项目
     }
     mapping(string => Vote) votes;//投票id=>投票
     //创建投票
     event CreateVote(string id, string name, string description, uint256 startTime, uint256 endTime);
     event AddCandidateToVote(string id,string candidateId);
     event RemoveVote(string id);
-    event voting(string id,address addr);
+    event voting(string id,uint256 candidatesId,address addr);
     event cancelVoting(string id,address addr);
 
     //创建候选项目
     function createCandidate(string memory _id,string memory name, string memory description) public{
         require(msg.sender == admin, "You are not the admin.");
-        candidates[_id].id = _id;
-        candidates[_id].name = name;
-        candidates[_id].description = description;
-        candidates[_id]._total = 0;
+        _candidates[_id].id = _id;
+        _candidates[_id].name = name;
+        _candidates[_id].description = description;
+        _candidates[_id]._total = 0;
     }
     
     //创建投票
@@ -82,7 +83,7 @@ contract Voting{
     //为投票添加候选项目
     function addCandidateToVote(string memory id,string memory candidateId) public{
         require(msg.sender == admin, "You are not the admin.");
-        votes[id].candidates.push(candidates[candidateId]);
+        votes[id].candidates.push(_candidates[candidateId]);
         emit AddCandidateToVote(id,candidateId);
     }
     //删除投票
@@ -92,11 +93,11 @@ contract Voting{
         emit RemoveVote(id);
     }
     //投票
-    function vote(string memory id,string memory _candidateId) public{
+    function vote(string memory id,uint256 _candidateId) public{
         require(block.timestamp >= votes[id].startTime && block.timestamp <= votes[id].endTime, "The vote is not in progress.");
         votes[id].total++;
-        candidates[_candidateId]._total++;
-        emit voting(id,msg.sender);
+        votes[id].candidates[_candidateId]._total++;
+        emit voting(id,_candidateId,msg.sender);
     }
     //撤销投票
     function cancelVote(string memory id) public{
@@ -104,11 +105,11 @@ contract Voting{
         votes[id].total--;
         emit cancelVoting(id,msg.sender);
     }
+    
     //查询
-
     //查询投票项目
     function getCandidate(string memory id) public view returns(Candidate memory){
-        return candidates[id];
+        return _candidates[id];
     }
     
     function getAllCandidatesOfVote(string memory id) public view returns(Candidate[] memory){
