@@ -92,6 +92,7 @@ contract Voting{
         delete votes[id];
         emit RemoveVote(id);
     }
+    
     //投票
     function vote(string memory id,uint256 _candidateId) public{
         require(block.timestamp >= votes[id].startTime && block.timestamp <= votes[id].endTime, "The vote is not in progress.");

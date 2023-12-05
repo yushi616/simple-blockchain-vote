@@ -23,7 +23,6 @@ describe("Voting contract", function () {
     await voting.connect(account2).vote("0",0);//vote
   });
 
-
   it("Should register a user", async function () {
     const user = await voting.connect(account2).getMyInfo(); 
     expect(user.name).to.equal("tzy");
