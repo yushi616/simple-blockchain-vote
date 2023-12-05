@@ -1,5 +1,6 @@
 const { expect } = require("chai");
 const { ethers } = require("hardhat");
+const { int } = require("hardhat/internal/core/params/argumentTypes");
 
 describe("Voting contract", function () {
   let Voting;
@@ -13,8 +14,8 @@ describe("Voting contract", function () {
     voting = await Voting.deploy(account1.address); 
     await voting.connect(account2).Sign_up("tzy", "123");
     //1865424000-1866132800
-    await voting.createVote("0","test","justTest",0,  10000000000);//create a voting
-    await voting.createVote("1","test1","justTest1",0,10000000000);
+    await voting.createVote("0","test","justTest",5);//create a voting
+    await voting.createVote("1","test1","justTest1",5);
     
   });
 
@@ -39,11 +40,11 @@ describe("Voting contract", function () {
   it("account1 should be able to create a voting", async function () {
     //const votes = await voting.getVote(0);
     const votes = await voting.getVote("1");
+    const oneDay = 24 * 60 * 60;
     //expect(votes.id).to.equal(0);
     expect(votes.name).to.equal("test1");
     expect(votes.description).to.equal("justTest1");
-    expect(votes.startTime).to.equal(0);
-    expect(votes.endTime).to.equal(10000000000);
+    expect(votes.endTime).to.equal(votes.startTime + 5 * oneDay);
     expect(votes.total).to.equal(0);
   });
   it("accpunt1 should be able to remove a voting", async function () {

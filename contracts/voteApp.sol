@@ -47,15 +47,16 @@ contract Voting{
     event voting(string id,address addr);
     event cancelVoting(string id,address addr);
 
-    function createVote(string memory _id,string memory name, string memory description, uint256 startTime, uint256 endTime) public{
+    function createVote(string memory _id,string memory name, string memory description, uint256 endTime) public{
         require(msg.sender == admin, "You are not the admin.");
+        uint256 _endTime = endTime*1 days;
         votes[_id].id = _id;
         votes[_id].name = name;
         votes[_id].description = description;
-        votes[_id].startTime = startTime;
-        votes[_id].endTime = endTime;
+        votes[_id].startTime = block.timestamp;
+        votes[_id].endTime = block.timestamp + _endTime;
         votes[_id].total = 0;
-        emit CreateVote(_id, name, description, startTime, endTime);
+        emit CreateVote(_id, name, description, block.timestamp, endTime);
     }
     //删除投票
     function removeVote(string memory id) public{
