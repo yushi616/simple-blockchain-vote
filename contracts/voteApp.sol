@@ -95,6 +95,7 @@ contract Voting{
     
     //投票
     function vote(string memory id,uint256 _candidateId) public{
+        require(users[msg.sender].addr == msg.sender, "You are not the user.");
         require(block.timestamp >= votes[id].startTime && block.timestamp <= votes[id].endTime, "The vote is not in progress.");
         votes[id].total++;
         votes[id].candidates[_candidateId]._total++;
