@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ethereum Transaction Example</title>
+</head>
+<body>
+
+<h1>Ethereum Transaction Example</h1>
+
+        <form action="/add" method="post" enctype="multipart/form-data">
+            <label>VoteId</label>
+            <input type="text" name="VoteId">
+            <br><br>
+            <label>CandidateId</label>
+            <input type="text" name="CandidateId">
+            <br><br>
+            <input type="submit" name="submit" onclick="addCandidate()">
+        </form>
+<button onclick="connectAndSignTransaction()">Sign Transaction</button>
+<script src="https://cdn.ethers.io/lib/ethers-5.7.umd.min.js"></script>
+<script>
+    let signer
+    const contractAddress = "0x5FbDB2315678afecb367f032d93F642f64180aa3"
+    async function connectAndSignTransaction() {
+        // 检查 MetaMask 是否已安装
+        if (typeof window.ethereum !== 'undefined') {
+            // 使用 ethers.js 连接到 MetaMask
+            console.log("start")
+            let provider = new ethers.providers.Web3Provider(window.ethereum)
+            try {
+                // 请求用户授权连接到 MetaMask
+                
+                const accounts = await window.ethereum.request({ method: 'eth_requestAccounts' });
+                console.log(accounts)
+                signer = provider.getSigner();
+                const connectedAccount = accounts[0];
+                console.log(connectedAccount)
+            } catch (error) {
+                console.error("MetaMask Connection or Transaction Error:", error);
+            }
+        }
+        
+    }
+    async function addCandidate(){
+        console.log(signer)
+        if ( signer != "undefined"){
+            //const contract = new ethers.Contract(contractAddress, abi, signer);
+            //const result = await contract.addCandidateToVote()
+            
+           
+        }else{
+            alert("You didn't load the accound")
+        }
+    }
+</script>
+
+</body>
+</html>
