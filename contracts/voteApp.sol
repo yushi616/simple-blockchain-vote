@@ -10,20 +10,17 @@ contract Voting{
     //登录\注册
     struct User{
         string name;
-        string password;
         address addr;
     }
     mapping(address => User) public users;//用户地址=>用户
     //注册
-    function Sign_up(string memory name, string memory password) public{
+    function Sign_up(string memory name) public{
         users[msg.sender].name = name;
-        users[msg.sender].password = password;
         users[msg.sender].addr = msg.sender;
     }
     //登录
-    function Log_in(string memory name, string memory password) public view returns(bool){
-        if(keccak256(abi.encodePacked(users[msg.sender].name)) == keccak256(abi.encodePacked(name)) && 
-        keccak256(abi.encodePacked(users[msg.sender].password)) == keccak256(abi.encodePacked(password))){
+    function Log_in(string memory name) public view returns(bool){
+        if(keccak256(abi.encodePacked(users[msg.sender].name)) == keccak256(abi.encodePacked(name)) ){
             return true;
         }
         else{
