@@ -52,6 +52,7 @@ contract Voting{
         //mapping(string => Candidate) candidates;//候选项目id=>候选项目
     }
     mapping(string => Vote) votes;//投票id=>投票
+     uint256 public voteCount;
     //创建投票
     event CreateVote(string id, string name, string description, uint256 startTime, uint256 endTime);
     event AddCandidateToVote(string id,string candidateId);
@@ -62,6 +63,8 @@ contract Voting{
     //创建候选项目
     function createCandidate(string memory _id,string memory name, string memory description) public{
         require(msg.sender == admin, "You are not the admin.");
+        //this id alreay exist
+        require(keccak256(abi.encodePacked(_candidates[_id].id)) != keccak256(abi.encodePacked(_id)), "The candidate id already exists.");        
         _candidates[_id].id = _id;
         _candidates[_id].name = name;
         _candidates[_id].description = description;
@@ -71,6 +74,8 @@ contract Voting{
     //创建投票
     function createVote(string memory _id,string memory name, string memory description, uint256 endTime) public{
         require(msg.sender == admin, "You are not the admin.");
+        //alreay exist
+        require(bytes(votes[_id].name).length == 0, "The vote already exists.");
         uint256 _endTime = endTime*1 days;
         votes[_id].id = _id;
         votes[_id].name = name;
@@ -78,24 +83,31 @@ contract Voting{
         votes[_id].startTime = block.timestamp;
         votes[_id].endTime = block.timestamp + _endTime;
         votes[_id].total = 0;
+        voteCount++;
         emit CreateVote(_id, name, description, block.timestamp, endTime);
     }
     //为投票添加候选项目
     function addCandidateToVote(string memory id,string memory candidateId) public{
         require(msg.sender == admin, "You are not the admin.");
+        require(bytes(_candidates[candidateId].name).length != 0, "The candidate does not exist.");
+        require(bytes(votes[id].name).length != 0, "The vote does not exist.");
         votes[id].candidates.push(_candidates[candidateId]);
         emit AddCandidateToVote(id,candidateId);
     }
     //删除投票
     function removeVote(string memory id) public{
         require(msg.sender == admin, "You are not the admin.");
+        require(bytes(votes[id].name).length != 0, "The vote does not exist.");
         delete votes[id];
+        voteCount--;
         emit RemoveVote(id);
+
     }
     
     //投票
     function vote(string memory id,uint256 _candidateId) public{
         require(users[msg.sender].addr == msg.sender, "You are not the user.");
+        require(bytes(votes[id].name).length != 0, "The vote does not exist.");
         require(block.timestamp >= votes[id].startTime && block.timestamp <= votes[id].endTime, "The vote is not in progress.");
         votes[id].total++;
         votes[id].candidates[_candidateId]._total++;
@@ -103,6 +115,8 @@ contract Voting{
     }
     //撤销投票
     function cancelVote(string memory id) public{
+        require(users[msg.sender].addr == msg.sender, "You are not the user.");
+        require(bytes(votes[id].name).length != 0, "The vote does not exist.");
         require(block.timestamp >= votes[id].startTime && block.timestamp <= votes[id].endTime, "The vote is not in progress.");
         votes[id].total--;
         emit cancelVoting(id,msg.sender);
@@ -113,15 +127,20 @@ contract Voting{
     function getCandidate(string memory id) public view returns(Candidate memory){
         return _candidates[id];
     }
-    
+    //
     function getAllCandidatesOfVote(string memory id) public view returns(Candidate[] memory){
         return votes[id].candidates;
     }
-
+    //查询一共有多少投票
+    function getVoteCount() public view returns(uint256){
+        return voteCount;
+    }
+   
     //查询投票
     function getVote(string memory id) public view returns(Vote memory){
             return votes[id];
     }
+
     //查询投票结果
     function getVoteResult(string memory id) public view returns(uint256){
         return votes[id].total;
