@@ -199,8 +199,22 @@ contract Voting {
     }
 
     //查询投票
-    function getVote(string memory id) public view returns (Vote memory) {
-        return votes[id];
+    function getVote(string memory id) public view returns (string memory,
+        string memory,
+        string memory,
+        uint256,
+        uint256,
+        uint256,
+        Candidate[] memory) {
+        return (
+            votes[id].id,
+            votes[id].name,
+            votes[id].description,
+            votes[id].startTime,
+            votes[id].endTime,
+            votes[id].total,
+            votes[id].candidates
+        );
     }
 
     //查询投票结果
