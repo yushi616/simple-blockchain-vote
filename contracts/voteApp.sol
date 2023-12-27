@@ -57,7 +57,8 @@ contract Voting {
         uint256 total;
         Candidate[] candidates;
     }
-    mapping(address => uint256[]) voteds; //已投票用户，用户地址=>候选项目id，防止重复投票，可以撤销投票，可以查看投票结果
+    //mapping(address => uint256[]) voteds; //已投票用户，用户地址=>候选项目id，防止重复投票，可以撤销投票，可以查看投票结果
+    mapping(address => mapping(uint256 => bool)) public voteds; // 用户地址 => 投票id => 是否已投票
     mapping(uint256 => Vote) votes; //投票id=>投票
     uint256 public voteCount;
     //创建投票
@@ -137,37 +138,42 @@ contract Voting {
         emit RemoveVote(id);
     }
 
-    //投票
-    function vote(uint256 id, uint256 _candidateId) public {
-        require(users[msg.sender].addr == msg.sender, "You are not the user.");
-        require(bytes(votes[id].name).length != 0, "The vote does not exist.");
-        require("You have already voted for this candidate");
-        require(
-            block.timestamp >= votes[id].startTime &&
-                block.timestamp <= votes[id].endTime,
-            "The vote is not in progress."
-        );
-        votes[id].total++;
-        votes[id].candidates[_candidateId]._total++;
-        voteds[msg.sender] = votes[id].candidates[_candidateId].id;
+   // 投票函数
+function vote(uint256 id, uint256 _candidateId) public {
+    require(users[msg.sender].addr == msg.sender, "You are not the user.");
+    require(bytes(votes[id].name).length != 0, "The vote does not exist.");
+    require(!voteds[msg.sender][id], "You have already voted for this vote."); // 检查用户是否已经投票
+    require(
+        block.timestamp >= votes[id].startTime &&
+            block.timestamp <= votes[id].endTime,
+        "The vote is not in progress."
+    );
+    votes[id].total++;
+    votes[id].candidates[_candidateId]._total++;
+    voteds[msg.sender][id] = true; // 标记用户已经投票
 
-        emit voting(id, _candidateId, msg.sender);
-    }
+    emit voting(id, _candidateId, msg.sender);
+}
 
-    //撤销投票
-    function cancelVote(uint256 id) public {
-        require(users[msg.sender].addr == msg.sender, "You are not the user.");
-        require(bytes(votes[id].name).length != 0, "The vote does not exist.");
-        require(
-            block.timestamp >= votes[id].startTime &&
-                block.timestamp <= votes[id].endTime,
-            "The vote is not in progress."
-        );
-        require(voteds[msg.sender] != 0, "You have not voted yet.");
-        voteds[msg.sender] = 0;
-        votes[id].total--;
-        emit cancelVoting(id, msg.sender);
-    }
+// 撤销投票函数
+function cancelVote(uint256 id) public {
+    require(users[msg.sender].addr == msg.sender, "You are not the user.");
+    require(bytes(votes[id].name).length != 0, "The vote does not exist.");
+    require(
+        block.timestamp >= votes[id].startTime &&
+            block.timestamp <= votes[id].endTime,
+        "The vote is not in progress."
+    );
+    require(voteds[msg.sender][id], "You have not voted yet."); // 检查用户是否已经投票
+    voteds[msg.sender][id] = false; // 标记用户已经撤销投票
+    votes[id].total--;
+    votes[id].candidates[id]._total--;
+
+    
+
+    emit cancelVoting(id, msg.sender);
+}
+
 
     //查询
     //查询候选项目
@@ -200,5 +206,13 @@ contract Voting {
     //查询用户
     function getMyInfo() public view returns (User memory) {
         return users[msg.sender];
+    }
+
+    function showAllCandidates() public view returns (Candidate[] memory) {
+        Candidate[] memory candidates = new Candidate[](nextCandidateId);
+        for (uint256 i = 0; i < nextCandidateId; i++) {
+            candidates[i] = _candidates[i];
+        }
+        return candidates;
     }
 }
